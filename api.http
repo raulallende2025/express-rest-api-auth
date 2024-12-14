@@ -1,0 +1,24 @@
+### Root
+GET http://localhost:3000
+
+### Register
+POST http://localhost:3000/register
+Content-Type: application/json
+
+{
+  "name": "test",
+  "email": "test@test.com",
+  "password": "Test123*"
+}
+
+### Login
+POST http://localhost:3000/login
+Content-Type: application/json
+
+{
+  "email": "test@test.com",
+  "password": "Test123*"
+}
+
+### Logout
+GET http://localhost:3000/logout

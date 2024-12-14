@@ -1,0 +1,27 @@
+{
+  "name": "express-rest-api-auth",
+  "version": "1.0.0",
+  "main": "server-db-local.js",
+  "type": "module",
+  "scripts": {
+    "dev:local": "node --watch server-db-local.js",
+    "dev:mysql": "node --watch server-mysql.js"
+  },
+  "keywords": [],
+  "author": "Raul Allende",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cookie-parser": "1.4.7",
+    "cors": "2.8.5",
+    "express": "4.21.2",
+    "jsonwebtoken": "9.0.2",
+    "password-hash": "1.2.2",
+    "zod": "3.24.1"
+  },
+  "devDependencies": {
+    "db-local": "3.1.0",
+    "dotenv": "16.4.7",
+    "mysql2": "3.11.5"
+  }
+}
