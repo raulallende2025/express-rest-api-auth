@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import passwordHash from "password-hash";
 import DBLocal from "db-local";
-import { TYPE_ERROR, ValidationError } from "../../utils/handleErrors.js";
+import { ValidationError } from "../../utils/errors.js";
 import { createAccessToken } from "../../utils/createToken.js";
 
 const { Schema } = new DBLocal({ path: "./db" });
@@ -16,7 +16,7 @@ export class UserModel {
   static async create({ name, email, password }) {
     const user = await this.findUserByEmail({ email });
 
-    if (user) throw new ValidationError(TYPE_ERROR.EMAIL_EXISTS);
+    if (user) throw new ValidationError("email already exists");
 
     const id = randomUUID();
     const hashedPassword = passwordHash.generate(password);
@@ -31,10 +31,10 @@ export class UserModel {
 
   static async login({ email, password }) {
     const user = await this.findUserByEmail({ email });
-    if (!user) throw new ValidationError(TYPE_ERROR.USER_NOT_EXISTS);
+    if (!user) throw new ValidationError("user does not exists");
 
     const isValid = passwordHash.verify(password, user.password);
-    if (!isValid) throw new ValidationError(TYPE_ERROR.USER_PASSWORD_INCORRECT);
+    if (!isValid) throw new ValidationError("user or password incorrect");
 
     const newUser = {
       id: user._id,

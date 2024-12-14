@@ -1,10 +1,6 @@
 import passwordHash from "password-hash";
-import mysql from "mysql2/promise";
-import {
-  ConnectionError,
-  QueryError,
-  ValidationError,
-} from "../../utils/errors.js";
+import pg from "pg";
+import { ConnectionError, ValidationError } from "../../utils/errors.js";
 import { createAccessToken } from "../../utils/createToken.js";
 import {
   DB_HOST,
@@ -22,11 +18,13 @@ const config = {
   database: DB_NAME,
 };
 
-async function excecuteQuery({ text, values, queryError }) {
-  let connection = null;
+const { Client } = pg;
+
+async function excecuteQuery(query) {
+  const client = new Client(config);
 
   try {
-    connection = await mysql.createConnection(config);
+    await client.connect();
   } catch (error) {
     throw new ConnectionError("error connecting to database");
   }
@@ -34,12 +32,12 @@ async function excecuteQuery({ text, values, queryError }) {
   let result = null;
 
   try {
-    if (values && values.length) result = await connection.query(text, values);
-    else result = await connection.query(text);
+    if (query.values && query.values.length) result = await client.query(query);
+    else result = await client.query(query);
   } catch (error) {
-    throw new QueryError(queryError);
+    throw new QueryError(query.queryError);
   } finally {
-    await connection.end();
+    await client.end();
   }
 
   return result;
@@ -47,27 +45,25 @@ async function excecuteQuery({ text, values, queryError }) {
 
 export class UserModel {
   static async create({ name, email, password }) {
-    const user = await this.findUserByEmail({ email });
+    const [user] = await this.findUserByEmail({ email });
     if (user) throw new ValidationError("email already exists");
 
     const newUser = { name, email };
     const hashedPassword = passwordHash.generate(password);
 
     const query = {
-      text: "SELECT UUID() uuid;",
+      text: "SELECT gen_random_uuid() id",
       values: [],
       queryError: "error getting a new id",
     };
-
-    const [uuidResult] = await excecuteQuery(query);
-    const [{ uuid }] = uuidResult;
-    newUser.id = uuid;
+    const { rows } = await excecuteQuery(query);
+    const [{ id }] = rows;
+    newUser.id = id;
 
     query.text =
-      'INSERT INTO users (id, name, email, password) VALUES (UUID_TO_BIN("?"), ?, ?, ?);';
-    query.values = [uuid, name, email, hashedPassword];
+      "INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)";
+    query.values = [id, name, email, hashedPassword];
     query.queryError = "error creating a new user";
-
     await excecuteQuery(query);
 
     const token = createAccessToken(newUser);
@@ -76,7 +72,7 @@ export class UserModel {
   }
 
   static async login({ email, password }) {
-    const user = await this.findUserByEmail({ email });
+    const [user] = await this.findUserByEmail({ email });
     if (!user) throw new ValidationError("user does not exists");
 
     const isValid = passwordHash.verify(password, user.password);
@@ -94,15 +90,11 @@ export class UserModel {
 
   static async findUserByEmail({ email }) {
     const query = {
-      text: "SELECT BIN_TO_UUID(id) id, name, email, password FROM users WHERE email = ?;",
+      text: "SELECT * FROM users WHERE email = $1",
       values: [email],
       queryError: "error getting user by email",
     };
-
-    const [result] = await excecuteQuery(query);
-
-    if (!result.length) return null;
-
-    return { ...result[0] };
+    const { rows } = await excecuteQuery(query);
+    return rows;
   }
 }

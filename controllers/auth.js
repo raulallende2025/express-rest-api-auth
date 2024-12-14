@@ -1,5 +1,5 @@
 import { validatePartialUser, validateUser } from "../schemas/user.js";
-import { TYPE_ERROR, ValidationError } from "../utils/handleErrors.js";
+import { ValidationError } from "../utils/errors.js";
 import { ACCESS_TOKEN } from "../config.js";
 
 export class AuthController {
@@ -9,42 +9,21 @@ export class AuthController {
 
   register = async (req, res) => {
     const { error, data } = validateUser(req.body);
-
     if (error)
-      return res.status(400).json({
-        message: TYPE_ERROR.BAD_REQUEST,
-        error: JSON.parse(error.message),
-      });
+      throw new ValidationError("Invalid data", JSON.parse(error.message));
 
-    try {
-      const { user, token } = await this.userModel.create({ ...data });
-      this.sendCookies(res, token, user);
-    } catch (err) {
-      if (err instanceof ValidationError)
-        return res.status(400).json({ message: err.message });
-
-      return res.status(500).json({ message: TYPE_ERROR.INTERNAL_ERROR });
-    }
+    const { user, token } = await this.userModel.create({ ...data });
+    this.sendCookies(res, token, user);
   };
 
-  login = async (req, res) => {
+  login = async (req, res, next) => {
     const { error, data } = validatePartialUser(req.body);
 
     if (error)
-      return res.status(400).json({
-        message: TYPE_ERROR.BAD_REQUEST,
-        error: JSON.parse(error.message),
-      });
+      throw new ValidationError("Invalid data", JSON.parse(error.message));
 
-    try {
-      const { user, token } = await this.userModel.login({ ...data });
-      this.sendCookies(res, token, user);
-    } catch (err) {
-      if (err instanceof ValidationError)
-        return res.status(400).json({ message: err.message });
-
-      return res.status(500).json({ message: TYPE_ERROR.INTERNAL_ERROR });
-    }
+    const { user, token } = await this.userModel.login({ ...data });
+    this.sendCookies(res, token, user);
   };
 
   logout = async (req, res) => {

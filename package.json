@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev:local": "node --watch server-db-local.js",
-    "dev:mysql": "node --watch server-mysql.js"
+    "dev:mysql": "node --watch server-mysql.js",
+    "dev:pg": "node --watch server-postgres.js"
   },
   "keywords": [],
   "author": "Raul Allende",
@@ -22,6 +23,7 @@
   "devDependencies": {
     "db-local": "3.1.0",
     "dotenv": "16.4.7",
-    "mysql2": "3.11.5"
+    "mysql2": "3.11.5",
+    "pg": "8.13.1"
   }
 }
