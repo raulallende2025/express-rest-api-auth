@@ -1,16 +1,21 @@
 import z from "zod";
-import { TYPE_ERROR } from "../utils/handleErrors.js";
-import { passwordValidationRegex } from "../utils/regex.js";
+import { REGEX } from "../utils/constants.js";
+import { MESSAGE } from "../utils/constants.js";
 
 const userSchema = z.object({
-  name: z.string().min(1, { message: TYPE_ERROR.EMPTY_STRING }),
-  email: z.string().min(1, { message: TYPE_ERROR.EMPTY_STRING }).email({
-    message: TYPE_ERROR.EMAIL_INVALID,
-  }),
+  name: z.string().min(1, { message: MESSAGE.VALIDATION.REQUIRED_FIELD }),
+  email: z
+    .string()
+    .min(1, { message: MESSAGE.VALIDATION.REQUIRED_FIELD })
+    .email({
+      message: MESSAGE.VALIDATION.INVALID_EMAIL,
+    }),
   password: z
     .string()
-    .min(1, { message: TYPE_ERROR.EMPTY_STRING })
-    .regex(passwordValidationRegex, { message: TYPE_ERROR.PASSWORD_INVALID }),
+    .min(1, { message: MESSAGE.VALIDATION.REQUIRED_FIELD })
+    .regex(REGEX.PASSWORD, {
+      message: MESSAGE.VALIDATION.INVALID_PASSWORD,
+    }),
 });
 
 export function validateUser(input) {

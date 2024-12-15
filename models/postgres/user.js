@@ -9,6 +9,8 @@ import {
   DB_PORT,
   DB_USER,
 } from "../../config.js";
+import { MESSAGE } from "../../utils/constants.js";
+import { QUERY } from "./queries/postgresql.js";
 
 const config = {
   host: DB_HOST,
@@ -26,7 +28,7 @@ async function excecuteQuery(query) {
   try {
     await client.connect();
   } catch (error) {
-    throw new ConnectionError("error connecting to database");
+    throw new ConnectionError(MESSAGE.ERROR.DATABASE_CONNECTION);
   }
 
   let result = null;
@@ -46,24 +48,23 @@ async function excecuteQuery(query) {
 export class UserModel {
   static async create({ name, email, password }) {
     const [user] = await this.findUserByEmail({ email });
-    if (user) throw new ValidationError("email already exists");
+    if (user) throw new ValidationError(MESSAGE.VALIDATION.EMAIL_EXISTS);
 
     const newUser = { name, email };
     const hashedPassword = passwordHash.generate(password);
 
     const query = {
-      text: "SELECT gen_random_uuid() id",
+      text: QUERY.GENERATE_NEW_ID,
       values: [],
-      queryError: "error getting a new id",
+      queryError: MESSAGE.QUERY_ERROR.GENERATE_ID,
     };
     const { rows } = await excecuteQuery(query);
     const [{ id }] = rows;
     newUser.id = id;
 
-    query.text =
-      "INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)";
+    query.text = QUERY.USER.INSERT;
     query.values = [id, name, email, hashedPassword];
-    query.queryError = "error creating a new user";
+    query.queryError = MESSAGE.QUERY_ERROR.CREATE_USER;
     await excecuteQuery(query);
 
     const token = createAccessToken(newUser);
@@ -73,10 +74,11 @@ export class UserModel {
 
   static async login({ email, password }) {
     const [user] = await this.findUserByEmail({ email });
-    if (!user) throw new ValidationError("user does not exists");
+    if (!user) throw new ValidationError(MESSAGE.VALIDATION.USER_NOT_FOUND);
 
     const isValid = passwordHash.verify(password, user.password);
-    if (!isValid) throw new ValidationError("user or password incorrect");
+    if (!isValid)
+      throw new ValidationError(MESSAGE.VALIDATION.INVALID_CREDENTIAL);
 
     const newUser = {
       id: user.id,
@@ -90,9 +92,9 @@ export class UserModel {
 
   static async findUserByEmail({ email }) {
     const query = {
-      text: "SELECT * FROM users WHERE email = $1",
+      text: QUERY.USER.FIND_BY_EMAIL,
       values: [email],
-      queryError: "error getting user by email",
+      queryError: MESSAGE.QUERY_ERROR.FIND_USER_BY_EMAIL,
     };
     const { rows } = await excecuteQuery(query);
     return rows;

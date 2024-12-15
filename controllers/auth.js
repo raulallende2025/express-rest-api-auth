@@ -1,6 +1,7 @@
 import { validatePartialUser, validateUser } from "../schemas/user.js";
 import { ValidationError } from "../utils/errors.js";
 import { ACCESS_TOKEN } from "../config.js";
+import { MESSAGE } from "../utils/constants.js";
 
 export class AuthController {
   constructor({ userModel }) {
@@ -10,7 +11,10 @@ export class AuthController {
   register = async (req, res) => {
     const { error, data } = validateUser(req.body);
     if (error)
-      throw new ValidationError("Invalid data", JSON.parse(error.message));
+      throw new ValidationError(
+        MESSAGE.VALIDATION.INVALID_DATA,
+        JSON.parse(error.message)
+      );
 
     const { user, token } = await this.userModel.create({ ...data });
     this.sendCookies(res, token, user);
@@ -20,7 +24,10 @@ export class AuthController {
     const { error, data } = validatePartialUser(req.body);
 
     if (error)
-      throw new ValidationError("Invalid data", JSON.parse(error.message));
+      throw new ValidationError(
+        MESSAGE.VALIDATION.INVALID_DATA,
+        JSON.parse(error.message)
+      );
 
     const { user, token } = await this.userModel.login({ ...data });
     this.sendCookies(res, token, user);

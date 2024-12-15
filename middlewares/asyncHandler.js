@@ -7,7 +7,6 @@ export const wrapAsyncRoutes = (router) => {
     if (layer.route) {
       layer.route.stack.forEach((routeLayer) => {
         if (typeof routeLayer.handle === "function") {
-          console.log("Envolviendo ruta: ", routeLayer.name);
           routeLayer.handle = asyncHandler(routeLayer.handle);
         }
       });

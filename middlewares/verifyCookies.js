@@ -1,12 +1,12 @@
 import jwt from "jsonwebtoken";
 import { ACCESS_TOKEN, SECRET_JWT_KEY } from "../config.js";
-import { TYPE_ERROR } from "../utils/handleErrors.js";
+import { MESSAGE } from "../utils/constants.js";
 
 export const verifyCookies = (req, res, next) => {
   const { [ACCESS_TOKEN]: token } = req.cookies;
 
   if (!token) {
-    return res.status(401).json({ message: TYPE_ERROR.ACCESS_NOT_AUTHORIZED });
+    return res.status(401).json({ message: MESSAGE.ERROR.UNAUTHORIZED });
   }
 
   try {
@@ -14,6 +14,6 @@ export const verifyCookies = (req, res, next) => {
 
     next();
   } catch (error) {
-    return res.status(401).json({ message: TYPE_ERROR.ACCESS_NOT_AUTHORIZED });
+    return res.status(401).json({ message: MESSAGE.ERROR.UNAUTHORIZED });
   }
 };
