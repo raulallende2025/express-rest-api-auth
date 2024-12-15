@@ -14,7 +14,7 @@ import {
   DB_USER,
 } from "../../config.js";
 import { MESSAGE } from "../../utils/constants.js";
-import { QUERY } from "./queries/mysql.js";
+import { QUERY } from "./queries/index.js";
 
 const config = {
   host: DB_HOST,
